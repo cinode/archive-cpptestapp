@@ -4,9 +4,9 @@
 #include <botan/botan.h>
 #include <QtGlobal>
 
-const int         blobType_simpleStaticFile          = 0x01;
-const std::string cipher_AES256_hexStr               = "01";
-const std::string validationMethod_HashSHA512_hexStr = "01";
+const int         blobType_simpleStaticFile   = 0x01;
+const int         validationMethod_HashSHA512 = 0x01;
+const std::string cipher_AES256_hexStr        = "01";
 
 template< typename T >
 std::string toHex( const T& data )
@@ -18,19 +18,38 @@ std::string toHex( const T& data )
     return hexPipe.read_all_as_string();
 }
 
+struct Blob
+{
+    Botan::SecureVector< Botan::byte > sourceData;
+    Botan::SecureVector< Botan::byte > resultData;
+    std::string bid;
+    std::string key;
+
+    void dump( std::string name )
+    {
+        std::cout << "======== " << name << " ==================================================================================" << std::endl;
+        std::cout << std::endl;
+        std::cout << "DATA: " << toHex( sourceData ) << std::endl;
+        std::cout << "BID:  " << bid << std::endl;
+        std::cout << "KEY:  " << key << std::endl;
+        std::cout << "BLOB: " << toHex( resultData ) << std::endl;
+        std::cout << std::endl;
+    }
+};
+
 template< typename T >
-void createBlobHash( char blobType, const char* blobName, const T& content )
+Blob createBlobHash( char blobType, const T& content )
 {
     Botan::SHA_512 hasher;
+    Blob ret;
 
     // Build the unencrypted data buffer
-    Botan::SecureVector< Botan::byte > unencryptedData;
-    unencryptedData.push_back( blobType );
-    for( const auto& ch: content ) unencryptedData.push_back(ch);
+    ret.sourceData.push_back( blobType );
+    for( const auto& ch: content ) ret.sourceData.push_back(ch);
 
     // Create the hash of the unencrypted buffer to be used as the encryption hey
     hasher.clear();
-    hasher.update( unencryptedData );
+    hasher.update( ret.sourceData );
     Botan::SymmetricKey key( hasher.final(), 32 );
     Botan::byte zeroIV[16] = {0};
     Botan::InitializationVector iv( zeroIV, sizeof(zeroIV) );
@@ -38,7 +57,7 @@ void createBlobHash( char blobType, const char* blobName, const T& content )
     // Encrypt the data
     Botan::Pipe pipe( Botan::get_cipher("AES-256/CFB/NoPadding", key, iv, Botan::ENCRYPTION ) );
     pipe.start_msg();
-    pipe.write( unencryptedData );
+    pipe.write( ret.sourceData );
     pipe.end_msg();
     Botan::SecureVector< Botan::byte > encryptedData = pipe.read_all();
 
@@ -47,17 +66,12 @@ void createBlobHash( char blobType, const char* blobName, const T& content )
     hasher.update( encryptedData );
 
     // Get the result
-    std::string bidStr  = toHex( hasher.final() );
-    std::string keyStr  = cipher_AES256_hexStr + toHex( key.bits_of() );
-    std::string blobStr = validationMethod_HashSHA512_hexStr + toHex( encryptedData );
+    ret.bid = toHex( hasher.final() );
+    ret.key = cipher_AES256_hexStr + toHex( key.bits_of() );
+    ret.resultData.push_back( validationMethod_HashSHA512 );
+    for( const auto& ch: encryptedData ) ret.resultData.push_back(ch);
 
-    std::cout << "======== " << blobName << " ==================================================================================" << std::endl;
-    std::cout << std::endl;
-    std::cout << "DATA: " << toHex( content ) << std::endl;
-    std::cout << "BID:  " << bidStr  << std::endl;
-    std::cout << "KEY:  " << keyStr  << std::endl;
-    std::cout << "BLOB: " << blobStr << std::endl;
-    std::cout << std::endl;
+    return ret;
 }
 
 void createSimpleFileBlobHash( const std::string& content )
@@ -65,7 +79,7 @@ void createSimpleFileBlobHash( const std::string& content )
     std::string name = "Simple File: '" + content.substr(0,20);
     if ( content.size()>20 ) name.append("...");
     name.append("'");
-    createBlobHash( blobType_simpleStaticFile, name.c_str(), content );
+    createBlobHash( blobType_simpleStaticFile, content ).dump( name );
 }
 
 
