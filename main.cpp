@@ -18,13 +18,14 @@ std::string toHex( const T& data )
     return hexPipe.read_all_as_string();
 }
 
-void createBlobHash( std::string content )
+template< typename T >
+void createBlobHash( char blobType, const char* blobName, const T& content )
 {
     Botan::SHA_512 hasher;
 
     // Build the unencrypted data buffer
     Botan::SecureVector< Botan::byte > unencryptedData;
-    unencryptedData.push_back( blobType_simpleStaticFile );
+    unencryptedData.push_back( blobType );
     for( const auto& ch: content ) unencryptedData.push_back(ch);
 
     // Create the hash of the unencrypted buffer to be used as the encryption hey
@@ -50,13 +51,21 @@ void createBlobHash( std::string content )
     std::string keyStr  = cipher_AES256_hexStr + toHex( key.bits_of() );
     std::string blobStr = validationMethod_HashSHA512_hexStr + toHex( encryptedData );
 
-    std::cout << "==================================" << std::endl;
-    std::cout << content << std::endl;
-    std::cout << "----------------------------------" << std::endl;
+    std::cout << "======== " << blobName << " ==================================================================================" << std::endl;
+    std::cout << std::endl;
     std::cout << "DATA: " << toHex( content ) << std::endl;
     std::cout << "BID:  " << bidStr  << std::endl;
     std::cout << "KEY:  " << keyStr  << std::endl;
     std::cout << "BLOB: " << blobStr << std::endl;
+    std::cout << std::endl;
+}
+
+void createSimpleFileBlobHash( const std::string& content )
+{
+    std::string name = "Simple File: '" + content.substr(0,20);
+    if ( content.size()>20 ) name.append("...");
+    name.append("'");
+    createBlobHash( blobType_simpleStaticFile, name.c_str(), content );
 }
 
 
@@ -64,21 +73,14 @@ int main(int argc, char *argv[])
 {
     Botan::LibraryInitializer init;
 
-    createBlobHash( "" );
-    createBlobHash( "a" );
-    createBlobHash( "Hello World!" );
+    createSimpleFileBlobHash( "" );
+    createSimpleFileBlobHash( "a" );
+    createSimpleFileBlobHash( "Hello World!" );
 
     std::string str;
     for( char ch = 'a'; ch <= 'z'; ch++ ) str.push_back(ch);
     for( char ch = 'A'; ch <= 'Z'; ch++ ) str.push_back(ch);
-    createBlobHash( str );
-
-    /*
-    std::string str;
-    for ( int i=0; i<100; i++ ) str.append("a");
-    */
-
-    //createBlobHash( str );
+    createSimpleFileBlobHash( str );
 
     Q_UNUSED(argc);
     Q_UNUSED(argv);
