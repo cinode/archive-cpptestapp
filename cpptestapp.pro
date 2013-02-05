@@ -23,3 +23,6 @@ unix {
     CONFIG += link_pkgconfig
     PKGCONFIG += botan-1.10
 }
+
+HEADERS += \
+    serializer.h
