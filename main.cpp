@@ -25,8 +25,8 @@ std::string toHex( const T& data )
 
 struct Blob
 {
-    Botan::SecureVector< Botan::byte > sourceData;
-    Botan::SecureVector< Botan::byte > resultData;
+    std::vector< char > sourceData;
+    std::vector< char > resultData;
     std::string bid;
     std::string key;
 
@@ -43,18 +43,26 @@ struct Blob
 };
 
 template< typename T >
+Botan::MemoryVector< Botan::byte > toBotan( const T& data )
+{
+    // NOTE: assumes the data is a container of byte-size values
+    return Botan::MemoryVector< Botan::byte >( (const Botan::byte*)&data[0], data.size() );
+}
+
+template< typename T >
 Blob createBlobHash( char blobType, const T& content )
 {
     Botan::SHA_512 hasher;
     Blob ret;
 
     // Build the unencrypted data buffer
-    ret.sourceData.push_back( blobType );
-    for( const auto& ch: content ) ret.sourceData.push_back(ch);
+    ret.sourceData.resize( content.size() + 1 );
+    ret.sourceData[0] = blobType;
+    std::copy( content.begin(), content.end(), ret.sourceData.begin()+1 );
 
     // Create the hash of the unencrypted buffer to be used as the encryption hey
     hasher.clear();
-    hasher.update( ret.sourceData );
+    hasher.update( toBotan( ret.sourceData ) );
     Botan::SymmetricKey key( hasher.final(), 32 );
     Botan::byte zeroIV[16] = {0};
     Botan::InitializationVector iv( zeroIV, sizeof(zeroIV) );
@@ -62,7 +70,7 @@ Blob createBlobHash( char blobType, const T& content )
     // Encrypt the data
     Botan::Pipe pipe( Botan::get_cipher("AES-256/CFB/NoPadding", key, iv, Botan::ENCRYPTION ) );
     pipe.start_msg();
-    pipe.write( ret.sourceData );
+    pipe.write( toBotan( ret.sourceData ) );
     pipe.end_msg();
     Botan::SecureVector< Botan::byte > encryptedData = pipe.read_all();
 
