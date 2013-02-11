@@ -216,7 +216,7 @@ void createDirBlobs()
     }
     });
 
-    createSimpleDirBlobHash( "Two entrie - empty file and 'a' file", {
+    createSimpleDirBlobHash( "Two entries - empty file and 'a' file", {
     {
         "a",
         "c9d30a9938ecea16bed58efe5ad5b998927a56da7c8c36c1ee13292dec79aa50c5613fc90d80c37a77a5a422691d1967693a1236892e228ad95ed6fe4b505d85",
