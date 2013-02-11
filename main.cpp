@@ -7,9 +7,11 @@
 #include "serializer.h"
 
 const int         blobType_simpleStaticFile   = 0x01;
+const int         blobType_splitStaticFile    = 0x02;
 const int         blobType_simpleStaticDir    = 0x11;
 const int         validationMethod_HashSHA512 = 0x01;
 const std::string cipher_AES256_hexStr        = "01";
+const size_t      simpleFileSizeLimit         = 16 * 1024*1024;
 
 template< typename T >
 std::string toHex( const T& data )
@@ -77,13 +79,68 @@ Blob createBlobHash( char blobType, const T& content )
     return ret;
 }
 
-void createSimpleFileBlobHash( const std::string& content )
+///////////////////////////////////////////////////////////////////////////////
+
+template< typename T >
+Blob createFileBlobHash( const T& content )
+{
+    std::vector< Blob > partials;
+
+    for ( size_t pos = 0; pos < content.size(); pos += simpleFileSizeLimit )
+    {
+        size_t partSize = std::min( simpleFileSizeLimit, content.size() - pos );
+        std::vector<char> partContent( content.begin()+pos, content.begin()+pos+partSize );
+        Blob blob = createBlobHash( blobType_simpleStaticFile, content );
+        partials.push_back( blob );
+    }
+
+    // Make sure we've got at least one blob
+    if ( partials.empty() )
+    {
+        partials.push_back( createBlobHash( blobType_simpleStaticFile, std::string() ) );
+    }
+
+    // Don't have to split the blob if it fits in one part
+    if ( partials.size() == 1 )
+    {
+        return partials.front();
+    }
+
+    // Create extra blob containing information about the parts
+    Serializer s;
+
+    s << content.size() << partials.size();
+    for ( const auto& blob: partials ) s << blob.bid << blob.key;
+
+    return createBlobHash( blobType_splitStaticFile, s.getData() );
+}
+
+void dumpFileBlobHash( const std::string& content )
 {
     std::string name = "Simple File: '" + content.substr(0,20);
     if ( content.size()>20 ) name.append("...");
     name.append("'");
-    createBlobHash( blobType_simpleStaticFile, content ).dump( name );
+
+    createFileBlobHash(content).dump( name );
 }
+
+void createFileBlobs()
+{
+    dumpFileBlobHash( "" );
+    dumpFileBlobHash( "a" );
+    dumpFileBlobHash( "Hello World!" );
+
+    std::string str;
+    for( char ch = 'a'; ch <= 'z'; ch++ ) str.push_back(ch);
+    for( char ch = 'A'; ch <= 'Z'; ch++ ) str.push_back(ch);
+    dumpFileBlobHash( str );
+
+    std::string aaa;
+    for ( size_t i=0; i<simpleFileSizeLimit; i++ ) aaa.push_back('a');
+    dumpFileBlobHash( aaa );
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 struct DirEntry
 {
@@ -113,18 +170,6 @@ void createSimpleDirBlobHash( const std::string& name, std::vector< DirEntry > e
     for( const auto& entry: entries ) s << entry.name << entry.bid << entry.key;
 
     createBlobHash( blobType_simpleStaticDir, s.getData() ).dump( name );
-}
-
-void createFileBlobs()
-{
-    createSimpleFileBlobHash( "" );
-    createSimpleFileBlobHash( "a" );
-    createSimpleFileBlobHash( "Hello World!" );
-
-    std::string str;
-    for( char ch = 'a'; ch <= 'z'; ch++ ) str.push_back(ch);
-    for( char ch = 'A'; ch <= 'Z'; ch++ ) str.push_back(ch);
-    createSimpleFileBlobHash( str );
 }
 
 void createDirBlobs()
