@@ -16,11 +16,35 @@ const size_t      simpleFileSizeLimit         = 16 * 1024*1024;
 template< typename T >
 std::string toHex( const T& data )
 {
-    Botan::Pipe hexPipe( new Botan::Hex_Encoder( Botan::Hex_Encoder::Lowercase ) );
-    hexPipe.start_msg();
-    hexPipe.write( data );
-    hexPipe.end_msg();
-    return hexPipe.read_all_as_string();
+    static const char charTable[] = "0123456789abcdef";
+
+    std::string ret;
+    if ( data.size() > 1024 )
+    {
+        ret = "*** LARGE *** ";
+        for ( size_t i=0; i<40; i++ )
+        {
+            ret.push_back( charTable[ ( data[i] >> 4 ) & 0xF ] );
+            ret.push_back( charTable[ ( data[i] >> 0 ) & 0xF ] );
+        }
+
+        ret.append("...");
+
+        for ( size_t i=data.size()-40; i<data.size(); i++ )
+        {
+            ret.push_back( charTable[ ( data[i] >> 4 ) & 0xF ] );
+            ret.push_back( charTable[ ( data[i] >> 0 ) & 0xF ] );
+        }
+    }
+    else
+    {
+        for ( const auto& val: data )
+        {
+            ret.push_back( charTable[ ( val >> 4 ) & 0xF ] );
+            ret.push_back( charTable[ ( val >> 0 ) & 0xF ] );
+        }
+    }
+    return ret;
 }
 
 struct Blob
