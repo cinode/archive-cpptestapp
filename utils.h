@@ -10,7 +10,7 @@ std::string toHex( const T& data )
     static const char charTable[] = "0123456789abcdef";
 
     std::string ret;
-    if ( data.size() > 1024 )
+    if ( data.size() > 80 )
     {
         ret = "*** LARGE *** ";
         for ( size_t i=0; i<40; i++ )
