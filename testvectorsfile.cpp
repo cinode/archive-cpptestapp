@@ -43,13 +43,18 @@ namespace
         return Blob::newHashValidatedBlob( blobType_splitStaticFile, s.getData() );
     }
 
+    void dumpFileBlobHash( const std::string& content, const std::string& name )
+    {
+        createFileBlobHash(content).dump( name );
+    }
+
     void dumpFileBlobHash( const std::string& content )
     {
         std::string name = "Simple File: '" + content.substr(0,20);
         if ( content.size()>20 ) name.append("...");
         name.append("'");
 
-        createFileBlobHash(content).dump( name );
+        dumpFileBlobHash( content, name );
     }
 }
 
@@ -64,10 +69,7 @@ void createFileTestVectors()
     for( char ch = 'A'; ch <= 'Z'; ch++ ) str.push_back(ch);
     dumpFileBlobHash( str );
 
-    /**/
     std::string aaa;
     for ( size_t i=0; i<simpleFileSizeLimit; i++ ) aaa.push_back('a');
-    dumpFileBlobHash( aaa );
-
-    /**/
+    dumpFileBlobHash( aaa, "Maximum simple file size filled with 'a'" );
 }
