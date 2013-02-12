@@ -5,13 +5,7 @@
 #include <QtGlobal>
 
 #include "serializer.h"
-
-const int         blobType_simpleStaticFile   = 0x01;
-const int         blobType_splitStaticFile    = 0x02;
-const int         blobType_simpleStaticDir    = 0x11;
-const int         validationMethod_HashSHA512 = 0x01;
-const std::string cipher_AES256_hexStr        = "01";
-const size_t      simpleFileSizeLimit         = 16 * 1024*1024;
+#include "consts.h"
 
 template< typename T >
 std::string toHex( const T& data )
@@ -138,6 +132,8 @@ Blob createFileBlobHash( const T& content )
         return partials.front();
     }
 
+    std::cout << "SPLIT FILE!!!" << std::endl;
+
     // Create extra blob containing information about the parts
     Serializer s;
 
@@ -167,9 +163,12 @@ void createFileBlobs()
     for( char ch = 'A'; ch <= 'Z'; ch++ ) str.push_back(ch);
     dumpFileBlobHash( str );
 
+    /**/
     std::string aaa;
     for ( size_t i=0; i<simpleFileSizeLimit; i++ ) aaa.push_back('a');
     dumpFileBlobHash( aaa );
+
+    /**/
 }
 
 ///////////////////////////////////////////////////////////////////////////////

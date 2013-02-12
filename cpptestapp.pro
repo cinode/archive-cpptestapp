@@ -25,4 +25,5 @@ unix {
 }
 
 HEADERS += \
-    serializer.h
+    serializer.h \
+    consts.h
