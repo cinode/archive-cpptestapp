@@ -72,4 +72,7 @@ void createFileTestVectors()
     std::string aaa;
     for ( size_t i=0; i<simpleFileSizeLimit; i++ ) aaa.push_back('a');
     dumpFileBlobHash( aaa, "Maximum simple file size filled with 'a'" );
+
+    aaa.push_back('a');
+    dumpFileBlobHash( aaa, "One byte over the simple size limit, filled with 'a'" );
 }
