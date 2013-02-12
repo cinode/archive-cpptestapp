@@ -40,7 +40,7 @@ void Blob::rebuildHashValidatedBlob()
     Botan::InitializationVector iv( zeroIV, sizeof(zeroIV) );
 
     // Encrypt the data
-    Botan::Pipe pipe( Botan::get_cipher("AES-256/CFB/NoPadding", key, iv, Botan::ENCRYPTION ) );
+    Botan::Pipe pipe( Botan::get_cipher("AES-256/CFB/NoPadding", keyHash, iv, Botan::ENCRYPTION ) );
     pipe.start_msg();
     pipe.write( toBotan( sourceData ) );
     pipe.end_msg();
