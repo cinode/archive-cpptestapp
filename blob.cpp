@@ -12,8 +12,7 @@ namespace
     template< typename T >
     Botan::MemoryVector< Botan::byte > toBotan( const T& data )
     {
-        // NOTE: assumes the data is a container of byte-size values
-        return Botan::MemoryVector< Botan::byte >( (const Botan::byte*)&data[0], data.size() );
+        return Botan::MemoryVector< Botan::byte >( (const Botan::byte*)&data[0], data.size() * sizeof(data[0]) );
     }
 }
 
