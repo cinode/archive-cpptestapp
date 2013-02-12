@@ -16,7 +16,9 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-    blob.cpp
+    blob.cpp \
+    testvectorsfile.cpp \
+    testvectorsdir.cpp
 
 QMAKE_CXXFLAGS += -std=c++0x
 
@@ -29,4 +31,6 @@ HEADERS += \
     serializer.h \
     consts.h \
     utils.h \
-    blob.h
+    blob.h \
+    testvectorsfile.h \
+    testvectorsdir.h
