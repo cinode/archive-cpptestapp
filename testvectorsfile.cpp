@@ -17,7 +17,7 @@ namespace
         {
             size_t partSize = std::min( simpleFileSizeLimit, content.size() - pos );
             std::vector<char> partContent( content.begin()+pos, content.begin()+pos+partSize );
-            partials.push_back( Blob::newHashValidatedBlob( blobType_simpleStaticFile, content ) );
+            partials.push_back( Blob::newHashValidatedBlob( blobType_simpleStaticFile, partContent ) );
         }
 
         // Make sure we've got at least one blob
