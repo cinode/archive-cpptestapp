@@ -15,7 +15,8 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    blob.cpp
 
 QMAKE_CXXFLAGS += -std=c++0x
 
@@ -27,4 +28,5 @@ unix {
 HEADERS += \
     serializer.h \
     consts.h \
-    utils.h
+    utils.h \
+    blob.h

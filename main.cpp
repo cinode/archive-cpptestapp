@@ -7,66 +7,7 @@
 #include "serializer.h"
 #include "consts.h"
 #include "utils.h"
-
-struct Blob
-{
-    std::vector< char > sourceData;
-    std::vector< char > resultData;
-    std::string bid;
-    std::string key;
-
-    void dump( std::string name )
-    {
-        std::cout << "======== " << name << " ==================================================================================" << std::endl;
-        std::cout << std::endl;
-        std::cout << "DATA: " << toHex( sourceData ) << std::endl;
-        std::cout << "BID:  " << bid << std::endl;
-        std::cout << "KEY:  " << key << std::endl;
-        std::cout << "BLOB: " << toHex( resultData ) << std::endl;
-        std::cout << std::endl;
-    }
-};
-
-
-template< typename T >
-Blob createBlobHash( char blobType, const T& content )
-{
-    Botan::SHA_512 hasher;
-    Blob ret;
-
-    // Build the unencrypted data buffer
-    ret.sourceData.resize( content.size() + 1 );
-    ret.sourceData[0] = blobType;
-    std::copy( content.begin(), content.end(), ret.sourceData.begin()+1 );
-
-    // Create the hash of the unencrypted buffer to be used as the encryption hey
-    hasher.clear();
-    hasher.update( toBotan( ret.sourceData ) );
-    Botan::SymmetricKey key( hasher.final(), 32 );
-    Botan::byte zeroIV[16] = {0};
-    Botan::InitializationVector iv( zeroIV, sizeof(zeroIV) );
-
-    // Encrypt the data
-    Botan::Pipe pipe( Botan::get_cipher("AES-256/CFB/NoPadding", key, iv, Botan::ENCRYPTION ) );
-    pipe.start_msg();
-    pipe.write( toBotan( ret.sourceData ) );
-    pipe.end_msg();
-    Botan::SecureVector< Botan::byte > encryptedData = pipe.read_all();
-
-    // Generate blob id
-    hasher.clear();
-    hasher.update( encryptedData );
-
-    // Get the result
-    ret.bid = toHex( hasher.final() );
-    ret.key = cipher_AES256_hexStr + toHex( key.bits_of() );
-    ret.resultData.push_back( validationMethod_HashSHA512 );
-    for( const auto& ch: encryptedData ) ret.resultData.push_back(ch);
-
-    return ret;
-}
-
-///////////////////////////////////////////////////////////////////////////////
+#include "blob.h"
 
 template< typename T >
 Blob createFileBlobHash( const T& content )
@@ -77,14 +18,13 @@ Blob createFileBlobHash( const T& content )
     {
         size_t partSize = std::min( simpleFileSizeLimit, content.size() - pos );
         std::vector<char> partContent( content.begin()+pos, content.begin()+pos+partSize );
-        Blob blob = createBlobHash( blobType_simpleStaticFile, content );
-        partials.push_back( blob );
+        partials.push_back( Blob::newHashValidatedBlob( blobType_simpleStaticFile, content ) );
     }
 
     // Make sure we've got at least one blob
     if ( partials.empty() )
     {
-        partials.push_back( createBlobHash( blobType_simpleStaticFile, std::string() ) );
+        partials.push_back( Blob::newHashValidatedBlob( blobType_simpleStaticFile, std::string() ) );
     }
 
     // Don't have to split the blob if it fits in one part
@@ -99,9 +39,9 @@ Blob createFileBlobHash( const T& content )
     Serializer s;
 
     s << content.size() << partials.size();
-    for ( const auto& blob: partials ) s << blob.bid << blob.key;
+    for ( const auto& blob: partials ) s << blob.getBid() << blob.getKey();
 
-    return createBlobHash( blobType_splitStaticFile, s.getData() );
+    return Blob::newHashValidatedBlob( blobType_splitStaticFile, s.getData() );
 }
 
 void dumpFileBlobHash( const std::string& content )
@@ -161,7 +101,7 @@ void createSimpleDirBlobHash( const std::string& name, std::vector< DirEntry > e
     s << entries.size();
     for( const auto& entry: entries ) s << entry.name << entry.bid << entry.key;
 
-    createBlobHash( blobType_simpleStaticDir, s.getData() ).dump( name );
+    Blob::newHashValidatedBlob( blobType_simpleStaticDir, s.getData() ).dump( name );
 }
 
 void createDirBlobs()

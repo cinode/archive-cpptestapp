@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <botan/botan.h>
+#include <string>
 
 /** \brief Convert given container to it's hex representation */
 template< typename T >
@@ -38,12 +38,5 @@ std::string toHex( const T& data )
     return ret;
 }
 
-/** \brief Convert the container to botan-friendly type */
-template< typename T >
-Botan::MemoryVector< Botan::byte > toBotan( const T& data )
-{
-    // NOTE: assumes the data is a container of byte-size values
-    return Botan::MemoryVector< Botan::byte >( (const Botan::byte*)&data[0], data.size() );
-}
 
 #endif // UTILS_H
