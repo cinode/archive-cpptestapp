@@ -40,6 +40,9 @@ class Blob
         /** \brief Get the result data */
         inline const std::vector< char >& getResultData() const { return resultData; }
 
+        /** \brief Get rid of data entries, leave bid and key only */
+        void cutData();
+
         /** \brief Dump the content of a blob to the std::count */
         void dump( std::string name ) const;
 

@@ -56,3 +56,9 @@ void Blob::rebuildHashValidatedBlob()
     resultData.push_back( validationMethod_HashSHA512 );
     for( const auto& ch: encryptedData ) resultData.push_back(ch);
 }
+
+void Blob::cutData()
+{
+    std::vector< char >().swap( sourceData );
+    std::vector< char >().swap( resultData );
+}
