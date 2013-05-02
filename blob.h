@@ -5,7 +5,7 @@
 #include <string>
 
 /** \brief Universal blob representation */
-struct Blob
+class Blob
 {
     public:
 
