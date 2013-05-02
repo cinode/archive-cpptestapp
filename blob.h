@@ -34,6 +34,12 @@ class Blob
         /** \brief Get the current bid */
         inline const std::string& getBid() const { return bid; }
 
+        /** \brief Get the source data */
+        inline const std::vector< char >& getSourceData() const { return sourceData; }
+
+        /** \brief Get the result data */
+        inline const std::vector< char >& getResultData() const { return resultData; }
+
         /** \brief Dump the content of a blob to the std::count */
         void dump( std::string name ) const;
 
