@@ -18,7 +18,10 @@ TEMPLATE = app
 SOURCES += main.cpp \
     blob.cpp \
     testvectorsfile.cpp \
-    testvectorsdir.cpp
+    testvectorsdir.cpp \
+    maintestvectors.cpp \
+    mainencryptfile.cpp \
+    fileblobbuilder.cpp
 
 QMAKE_CXXFLAGS += -std=c++0x
 
@@ -33,4 +36,8 @@ HEADERS += \
     utils.h \
     blob.h \
     testvectorsfile.h \
-    testvectorsdir.h
+    testvectorsdir.h \
+    fileblobbuilder.h
+
+# QMAKE_CXXFLAGS_DEBUG += -pg
+# QMAKE_LFLAGS_DEBUG += -pg
