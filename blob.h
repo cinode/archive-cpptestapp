@@ -13,6 +13,8 @@ class Blob
         template< typename T >
         static Blob newHashValidatedBlob( char blobType, const T& content )
         {
+            static_assert( sizeof(content[0]) == 1, "content's element must be of byte size" );
+
             Blob ret;
 
             // Build the unencrypted data buffer
